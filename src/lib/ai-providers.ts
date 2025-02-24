@@ -10,7 +10,7 @@ export interface Model {
   name: string;
   description: string;
   pricing: string;
-  provider: 'openrouter' | 'aiml';
+  provider: 'openrouter' | 'aiml'; 
 }
 
 export const AVAILABLE_MODELS: Model[] = [

@@ -27,7 +27,8 @@ import {
 import { useAuthStore } from '../store/authStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useChatStore, Chat, Folder as FolderType } from '../store/chatStore';
-import { sendMessage, Message, AVAILABLE_MODELS } from '../lib/openrouter';
+import { sendMessage, Message, AVAILABLE_MODELS } from '../lib/ai-providers'
+//import { sendMessage, Message, AVAILABLE_MODELS } from '../lib/openrouter';
 import { uploadFile } from '../lib/supabase';
 import {
   DndContext,
