@@ -23,12 +23,13 @@ import {
   CheckCircle2,
   PanelLeftClose,
   PanelLeft,
+  Zap,
+  Brain,
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useChatStore, Chat, Folder as FolderType } from '../store/chatStore';
-import { sendMessage, Message, AVAILABLE_MODELS } from '../lib/ai-providers'
-//import { sendMessage, Message, AVAILABLE_MODELS } from '../lib/openrouter';
+import { sendMessage, Message, AVAILABLE_MODELS } from '../lib/ai-providers';
 import { uploadFile } from '../lib/supabase';
 import {
   DndContext,
@@ -46,7 +47,6 @@ import {
   sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
-  arrayMove,
 } from '@dnd-kit/sortable';
 
 interface SortableChatItemProps {
@@ -72,6 +72,8 @@ function SortableChatItem({ chat, activeChat, onSelect, onDelete, onRename, isDr
     transition,
   } : undefined;
 
+  const model = AVAILABLE_MODELS.find(m => m.id === chat.model);
+
   return (
     <div
       ref={setNodeRef}
@@ -90,7 +92,11 @@ function SortableChatItem({ chat, activeChat, onSelect, onDelete, onRename, isDr
       >
         <GripVertical className="h-4 w-4 text-zinc-400" />
       </button>
-      <MessageSquare className="h-4 w-4" />
+      {model?.provider === 'aiml' ? (
+        <Brain className="h-4 w-4 text-blue-400" />
+      ) : (
+        <Zap className="h-4 w-4 text-purple-400" />
+      )}
       <span className="flex-1 truncate text-left">{chat.title}</span>
       <button
         onClick={(e) => {
@@ -221,6 +227,7 @@ export function ChatInterface() {
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState<'openrouter' | 'aiml'>('openrouter');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -349,11 +356,9 @@ export function ChatInterface() {
     if (activeId === overId) return;
 
     if (overId.startsWith('folder-')) {
-      // Moving to a folder
       const folderId = overId.replace('folder-', '');
       moveChat(activeId, folderId);
     } else {
-      // Reordering within the same folder
       const activeChat = chats.find(chat => chat.id === activeId);
       if (!activeChat) return;
 
@@ -367,6 +372,8 @@ export function ChatInterface() {
       }
     }
   };
+
+  const filteredModels = AVAILABLE_MODELS.filter(model => model.provider === selectedProvider);
 
   const renderChatList = (chats: Chat[], folderId: string | null = null) => {
     const filteredChats = chats
@@ -425,19 +432,54 @@ export function ChatInterface() {
                 <Bot className="h-5 w-5 text-white" />
                 <h3 className="text-sm font-medium text-white">AI Models</h3>
               </div>
-              <div className="relative">
-                <select
-                  value={selectedModel}
-                  onChange={(e) => setSelectedModel(e.target.value)}
-                  className="w-full bg-zinc-800 text-white px-4 py-2 rounded-lg appearance-none cursor-pointer focus:ring-2 focus:ring-white focus:outline-none"
+
+              {/* Provider Selection */}
+              <div className="flex gap-2 mb-4">
+                <button
+                  onClick={() => setSelectedProvider('openrouter')}
+                  className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-2 transition-colors ${
+                    selectedProvider === 'openrouter'
+                      ? 'bg-purple-500 text-white'
+                      : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                  }`}
                 >
-                  {AVAILABLE_MODELS.map((model) => (
-                    <option key={model.id} value={model.id}>
-                      {model.name} - {model.pricing}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-zinc-400 h-5 w-5 pointer-events-none" />
+                  <Zap className="h-4 w-4" />
+                  OpenRouter
+                </button>
+                <button
+                  onClick={() => setSelectedProvider('aiml')}
+                  className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-2 transition-colors ${
+                    selectedProvider === 'aiml'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                  }`}
+                >
+                  <Brain className="h-4 w-4" />
+                  AIML
+                </button>
+              </div>
+
+              {/* Model Selection */}
+              <div className="space-y-2">
+                {filteredModels.map((model) => (
+                  <button
+                    key={model.id}
+                    onClick={() => setSelectedModel(model.id)}
+                    className={`w-full p-3 rounded-lg text-left transition-colors ${
+                      selectedModel === model.id
+                        ? 'bg-white bg-opacity-10 text-white'
+                        : 'hover:bg-zinc-800 text-zinc-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-medium">{model.name}</span>
+                      <span className="text-xs px-2 py-1 rounded-full bg-zinc-800">
+                        {model.pricing}
+                      </span>
+                    </div>
+                    <p className="text-xs text-zinc-400">{model.description}</p>
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -527,13 +569,24 @@ export function ChatInterface() {
                 : 'Select a chat'}
             </h1>
             {activeChat && (
-              <span className="px-2 py-1 rounded-full bg-white bg-opacity-10 text-white text-sm">
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-1 rounded-full bg-white bg-opacity-10 text-white text-sm">
+                  {AVAILABLE_MODELS.find(
+                    (m) =>
+                      m.id ===
+                      chats.find((chat) => chat.id === activeChat)?.model
+                  )?.name}
+                </span>
                 {AVAILABLE_MODELS.find(
                   (m) =>
                     m.id ===
                     chats.find((chat) => chat.id === activeChat)?.model
-                )?.name}
-              </span>
+                )?.provider === 'aiml' ? (
+                  <Brain className="h-4 w-4 text-blue-400" />
+                ) : (
+                  <Zap className="h-4 w-4 text-purple-400" />
+                )}
+              </div>
             )}
           </div>
         </header>
