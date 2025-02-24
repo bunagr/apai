@@ -15,39 +15,26 @@ export interface Model {
 
 export const AVAILABLE_MODELS: Model[] = [
   {
-    id: 'anthropic/claude-2',
-    name: 'Claude 2',
-    description: 'Anthropic\'s most capable model',
-    pricing: '$8/M tokens',
+    id: 'cognitivecomputations/dolphin3.0-r1-mistral-24b:free',
+    name: 'Dolphin R3',
+    description: 'Dolphin\'s most capable model',
+    pricing: '$0/M tokens',
     provider: 'openrouter'
   },
   {
-    id: 'google/palm-2-chat-bison',
-    name: 'PaLM 2 Bison',
-    description: 'Google\'s chat-optimized model',
-    pricing: '$0.5/M tokens',
+    id: 'meta-llama/llama-3.3-70b-instruct:free',
+    name: 'Llama 3.3',
+    description: 'Multilingual large language model',
+    pricing: '$0/M tokens',
     provider: 'openrouter'
   },
-  {
-    id: 'meta-llama/llama-2-70b-chat',
-    name: 'Llama 2 70B',
-    description: 'Meta\'s largest open model',
-    pricing: '$1.5/M tokens',
-    provider: 'openrouter'
-  },
-  {
-    id: 'mistral-7b',
-    name: 'Mistral 7B',
-    description: 'Efficient open source model',
-    pricing: '$0.2/M tokens',
-    provider: 'aiml'
-  }
+  
 ];
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const OPENROUTER_API_KEY = ''; // Replace with your actual API key
 const AIML_API_URL = 'https://api.aimlapi.com/v1/chat/completions';
-const AIML_API_KEY = ''; 
+const AIML_API_KEY = '1efd1cd8e9ae4c9d94a620e2bfb607a6'; // Replace with your actual API key
 
 async function sendOpenRouterMessage(messages: Message[], model: string): Promise<Message> {
   try {

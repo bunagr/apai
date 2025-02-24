@@ -444,7 +444,7 @@ export function ChatInterface() {
                   }`}
                 >
                   <Zap className="h-4 w-4" />
-                  OpenRouter
+                  Free
                 </button>
                 <button
                   onClick={() => setSelectedProvider('aiml')}
